@@ -1064,7 +1064,7 @@ static jint Posix_sendtoBytes(JNIEnv* env, jobject, jobject javaFd, jobject java
     }
     const sockaddr* to = (javaInetAddress != NULL) ? reinterpret_cast<const sockaddr*>(&ss) : NULL;
     socklen_t toLength = (javaInetAddress != NULL) ? sizeof(ss) : 0;
-    return NET_FAILURE_RETRY(env, ssize_t, sendto, javaFd, bytes.get() + byteOffset, byteCount, flags, to, toLength);
+    return NET_FAILURE_RETRY(env, ssize_t, sendto, javaFd, bytes.get() + byteOffset, byteCount, flags | MSG_NOSIGNAL, to, toLength);
 }
 
 static void Posix_setegid(JNIEnv* env, jobject, jint egid) {

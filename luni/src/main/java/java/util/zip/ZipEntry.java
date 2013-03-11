@@ -19,7 +19,6 @@ package java.util.zip;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.EOFException;
 import java.nio.ByteOrder;
 import java.nio.charset.Charsets;
 import java.util.Calendar;
@@ -351,14 +350,7 @@ public class ZipEntry implements ZipConstants, Cloneable {
      * On exit, "in" will be positioned at the start of the next entry.
      */
     ZipEntry(byte[] hdrBuf, InputStream in) throws IOException {
-
-        try {
-            Streams.readFully(in, hdrBuf, 0, hdrBuf.length);
-        } catch (EOFException e) {
-            /* Streams.readFully throws an EOFException when the
-               hdrBuf.length is exceed the EOF of the in .  */
-            throw new ZipException("Streams.readFully EOF error");
-        }
+        Streams.readFully(in, hdrBuf, 0, hdrBuf.length);
 
         BufferIterator it = HeapBufferIterator.iterator(hdrBuf, 0, hdrBuf.length, ByteOrder.LITTLE_ENDIAN);
 
@@ -386,38 +378,20 @@ public class ZipEntry implements ZipConstants, Cloneable {
         mLocalHeaderRelOffset = ((long) it.readInt()) & 0xffffffffL;
 
         byte[] nameBytes = new byte[nameLength];
-        try {
-            Streams.readFully(in, nameBytes, 0, nameBytes.length);
-        } catch (EOFException e) {
-            /* Streams.readFully throws an EOFException when the
-               nameBytes.length is exceed the EOF of the in . */
-            throw new ZipException("Streams.readFully EOF error");
-        }
+        Streams.readFully(in, nameBytes, 0, nameBytes.length);
         name = new String(nameBytes, 0, nameBytes.length, Charsets.UTF_8);
 
         // The RI has always assumed UTF-8. (If GPBF_UTF8_FLAG isn't set, the encoding is
         // actually IBM-437.)
         if (commentLength > 0) {
             byte[] commentBytes = new byte[commentLength];
-        try {
             Streams.readFully(in, commentBytes, 0, commentLength);
-        } catch (EOFException e) {
-            /* Streams.readFully throws an EOFException when the
-               commentLength is exceed the EOF of the in .  */
-            throw new ZipException("Streams.readFully EOF error");
-        }
-               comment = new String(commentBytes, 0, commentBytes.length, Charsets.UTF_8);
+            comment = new String(commentBytes, 0, commentBytes.length, Charsets.UTF_8);
         }
 
         if (extraLength > 0) {
             extra = new byte[extraLength];
-        try {
             Streams.readFully(in, extra, 0, extraLength);
-        } catch (EOFException e) {
-            /* Streams.readFully throws an EOFException when the
-            extraLength is exceed the EOF of the in .  */
-            throw new ZipException("Streams.readFully EOF error");
-        }
         }
     }
 }

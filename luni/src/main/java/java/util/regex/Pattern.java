@@ -380,7 +380,7 @@ public final class Pattern implements Serializable {
 
         if(   localPattern == null
            || ( localPattern.pattern() != regularExpression
-                && !regularExpression.equals(localPattern.pattern()) )
+                && (regularExpression == null || !regularExpression.equals(localPattern.pattern())) )
            || localPattern.flags() != flags )
         {
             Pattern newPattern = new Pattern(regularExpression, flags);

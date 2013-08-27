@@ -877,20 +877,12 @@ static void Posix_munmap(JNIEnv* env, jobject, jlong address, jlong byteCount) {
     throwIfMinusOne(env, "munmap", TEMP_FAILURE_RETRY(munmap(ptr, byteCount)));
 }
 
-#ifdef WITH_HOUDINI
-extern "C" int houdini_hook_open(const char *path, int flags, int mode);
-#endif
-
 static jobject Posix_open(JNIEnv* env, jobject, jstring javaPath, jint flags, jint mode) {
     ScopedUtfChars path(env, javaPath);
     if (path.c_str() == NULL) {
         return NULL;
     }
-#ifdef WITH_HOUDINI
-    int fd = throwIfMinusOne(env, "open", houdini_hook_open(path.c_str(), flags, mode));
-#else
     int fd = throwIfMinusOne(env, "open", TEMP_FAILURE_RETRY(open(path.c_str(), flags, mode)));
-#endif
     return fd != -1 ? jniCreateFileDescriptor(env, fd) : NULL;
 }
 
@@ -1064,7 +1056,7 @@ static jint Posix_sendtoBytes(JNIEnv* env, jobject, jobject javaFd, jobject java
     }
     const sockaddr* to = (javaInetAddress != NULL) ? reinterpret_cast<const sockaddr*>(&ss) : NULL;
     socklen_t toLength = (javaInetAddress != NULL) ? sizeof(ss) : 0;
-    return NET_FAILURE_RETRY(env, ssize_t, sendto, javaFd, bytes.get() + byteOffset, byteCount, flags | MSG_NOSIGNAL, to, toLength);
+    return NET_FAILURE_RETRY(env, ssize_t, sendto, javaFd, bytes.get() + byteOffset, byteCount, flags, to, toLength);
 }
 
 static void Posix_setegid(JNIEnv* env, jobject, jint egid) {

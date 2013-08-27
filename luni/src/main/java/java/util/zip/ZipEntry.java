@@ -19,7 +19,6 @@ package java.util.zip;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.EOFException;
 import java.nio.ByteOrder;
 import java.nio.charset.Charsets;
 import java.util.Calendar;
@@ -351,14 +350,7 @@ public class ZipEntry implements ZipConstants, Cloneable {
      * On exit, "in" will be positioned at the start of the next entry.
      */
     ZipEntry(byte[] hdrBuf, InputStream in) throws IOException {
-
-        try {
-            Streams.readFully(in, hdrBuf, 0, hdrBuf.length);
-        } catch (EOFException e) {
-            /* Streams.readFully throws an EOFException when the
-               hdrBuf.length is exceed the EOF of the in .  */
-            throw new ZipException("Streams.readFully EOF error");
-        }
+        Streams.readFully(in, hdrBuf, 0, hdrBuf.length);
 
         BufferIterator it = HeapBufferIterator.iterator(hdrBuf, 0, hdrBuf.length, ByteOrder.LITTLE_ENDIAN);
 
@@ -368,56 +360,38 @@ public class ZipEntry implements ZipConstants, Cloneable {
         }
 
         it.seek(10);
-        compressionMethod = it.readShort() & 0xffff;
-        time = it.readShort() & 0xffff;
-        modDate = it.readShort() & 0xffff;
+        compressionMethod = it.readShort();
+        time = it.readShort();
+        modDate = it.readShort();
 
         // These are 32-bit values in the file, but 64-bit fields in this object.
         crc = ((long) it.readInt()) & 0xffffffffL;
         compressedSize = ((long) it.readInt()) & 0xffffffffL;
         size = ((long) it.readInt()) & 0xffffffffL;
 
-        nameLength = it.readShort() & 0xffff;
-        int extraLength = it.readShort() & 0xffff;
-        int commentLength = it.readShort() & 0xffff;
+        nameLength = it.readShort();
+        int extraLength = it.readShort();
+        int commentLength = it.readShort();
 
         // This is a 32-bit value in the file, but a 64-bit field in this object.
         it.seek(42);
         mLocalHeaderRelOffset = ((long) it.readInt()) & 0xffffffffL;
 
         byte[] nameBytes = new byte[nameLength];
-        try {
-            Streams.readFully(in, nameBytes, 0, nameBytes.length);
-        } catch (EOFException e) {
-            /* Streams.readFully throws an EOFException when the
-               nameBytes.length is exceed the EOF of the in . */
-            throw new ZipException("Streams.readFully EOF error");
-        }
+        Streams.readFully(in, nameBytes, 0, nameBytes.length);
         name = new String(nameBytes, 0, nameBytes.length, Charsets.UTF_8);
 
         // The RI has always assumed UTF-8. (If GPBF_UTF8_FLAG isn't set, the encoding is
         // actually IBM-437.)
         if (commentLength > 0) {
             byte[] commentBytes = new byte[commentLength];
-        try {
             Streams.readFully(in, commentBytes, 0, commentLength);
-        } catch (EOFException e) {
-            /* Streams.readFully throws an EOFException when the
-               commentLength is exceed the EOF of the in .  */
-            throw new ZipException("Streams.readFully EOF error");
-        }
-               comment = new String(commentBytes, 0, commentBytes.length, Charsets.UTF_8);
+            comment = new String(commentBytes, 0, commentBytes.length, Charsets.UTF_8);
         }
 
         if (extraLength > 0) {
             extra = new byte[extraLength];
-        try {
             Streams.readFully(in, extra, 0, extraLength);
-        } catch (EOFException e) {
-            /* Streams.readFully throws an EOFException when the
-            extraLength is exceed the EOF of the in .  */
-            throw new ZipException("Streams.readFully EOF error");
-        }
         }
     }
 }

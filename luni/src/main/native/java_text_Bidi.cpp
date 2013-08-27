@@ -17,6 +17,7 @@
 
 #define LOG_TAG "Bidi"
 
+#include "IcuUtilities.h"
 #include "JNIHelp.h"
 #include "JniConstants.h"
 #include "JniException.h"
@@ -144,7 +145,8 @@ static jobjectArray Bidi_ubidi_getRuns(JNIEnv* env, jclass, jlong ptr) {
     if (maybeThrowIcuException(env, "ubidi_countRuns", status)) {
         return NULL;
     }
-    jmethodID bidiRunConstructor = env->GetMethodID(JniConstants::bidiRunClass, "<init>", "(III)V");
+    static jmethodID bidiRunConstructor =
+            env->GetMethodID(JniConstants::bidiRunClass, "<init>", "(III)V");
     jobjectArray runs = env->NewObjectArray(runCount, JniConstants::bidiRunClass, NULL);
     UBiDiLevel level = 0;
     int start = 0;

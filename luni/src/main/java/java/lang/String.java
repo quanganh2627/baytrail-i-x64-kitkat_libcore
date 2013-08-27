@@ -282,14 +282,14 @@ outer:
 
                     if (idx + utfCount > last) {
                         v[s++] = REPLACEMENT_CHAR;
-                        break;
+                        continue;
                     }
 
                     // Extract usable bits from b0
                     int val = b0 & (0x1f >> (utfCount - 1));
-                    for (int i = 0; i < utfCount; i++) {
+                    for (int i = 0; i < utfCount; ++i) {
                         byte b = d[idx++];
-                        if ((b & 0xC0) != 0x80) {
+                        if ((b & 0xc0) != 0x80) {
                             v[s++] = REPLACEMENT_CHAR;
                             idx--; // Put the input char back
                             continue outer;
@@ -1220,29 +1220,7 @@ outer:
      * @throws NullPointerException
      *             if {@code string} is {@code null}.
      */
-    public boolean regionMatches(int thisStart, String string, int start, int length) {
-        if (string == null) {
-            throw new NullPointerException("string == null");
-        }
-        if (start < 0 || string.count - start < length) {
-            return false;
-        }
-        if (thisStart < 0 || count - thisStart < length) {
-            return false;
-        }
-        if (length <= 0) {
-            return true;
-        }
-        int o1 = offset + thisStart, o2 = string.offset + start;
-        char[] value1 = value;
-        char[] value2 = string.value;
-        for (int i = 0; i < length; ++i) {
-            if (value1[o1 + i] != value2[o2 + i]) {
-                return false;
-            }
-        }
-        return true;
-    }
+    public native boolean regionMatches(int thisStart, String string, int start, int length);
 
     /**
      * Compares the specified string to this string and compares the specified

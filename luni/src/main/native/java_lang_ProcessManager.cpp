@@ -27,8 +27,10 @@
 #include "jni.h"
 #include "JNIHelp.h"
 #include "JniConstants.h"
+#include "Portability.h"
 #include "ScopedLocalRef.h"
 #include "cutils/log.h"
+#include "toStringArray.h"
 
 /** Close all open fds > 2 (i.e. everything but stdin/out/err), != skipFd. */
 static void closeNonStandardFds(int skipFd1, int skipFd2) {
@@ -101,9 +103,9 @@ static pid_t executeProcess(JNIEnv* env, char** commands, char** environment,
     // If this is the child process...
     if (childPid == 0) {
         /*
-         * Note: We cannot malloc() or free() after this point!
-         * A no-longer-running thread may be holding on to the heap lock, and
-         * an attempt to malloc() or free() would result in deadlock.
+         * Note: We cannot malloc(3) or free(3) after this point!
+         * A thread in the parent that no longer exists in the child may have held the heap lock
+         * when we forked, so an attempt to malloc(3) or free(3) would result in deadlock.
          */
 
         // Replace stdin, out, and err with pipes.
@@ -143,11 +145,11 @@ static pid_t executeProcess(JNIEnv* env, char** commands, char** environment,
         execvp(commands[0], commands);
 
         // If we got here, execvp() failed or the working dir was invalid.
-        execFailed:
-            int error = errno;
-            write(statusOut, &error, sizeof(int));
-            close(statusOut);
-            exit(error);
+execFailed:
+        int error = errno;
+        write(statusOut, &error, sizeof(int));
+        close(statusOut);
+        exit(error);
     }
 
     // This is the parent process.
@@ -180,40 +182,6 @@ static pid_t executeProcess(JNIEnv* env, char** commands, char** environment,
     jniSetFileDescriptorOfFD(env, errDescriptor, stderrIn);
 
     return childPid;
-}
-
-/** Converts a Java String[] to a 0-terminated char**. */
-static char** convertStrings(JNIEnv* env, jobjectArray javaArray) {
-    if (javaArray == NULL) {
-        return NULL;
-    }
-
-    jsize length = env->GetArrayLength(javaArray);
-    char** array = new char*[length + 1];
-    array[length] = 0;
-    for (jsize i = 0; i < length; ++i) {
-        ScopedLocalRef<jstring> javaEntry(env, reinterpret_cast<jstring>(env->GetObjectArrayElement(javaArray, i)));
-        // We need to pass these strings to const-unfriendly code.
-        char* entry = const_cast<char*>(env->GetStringUTFChars(javaEntry.get(), NULL));
-        array[i] = entry;
-    }
-
-    return array;
-}
-
-/** Frees a char** which was converted from a Java String[]. */
-static void freeStrings(JNIEnv* env, jobjectArray javaArray, char** array) {
-    if (javaArray == NULL) {
-        return;
-    }
-
-    jsize length = env->GetArrayLength(javaArray);
-    for (jsize i = 0; i < length; ++i) {
-        ScopedLocalRef<jstring> javaEntry(env, reinterpret_cast<jstring>(env->GetObjectArrayElement(javaArray, i)));
-        env->ReleaseStringUTFChars(javaEntry.get(), array[i]);
-    }
-
-    delete[] array;
 }
 
 /**

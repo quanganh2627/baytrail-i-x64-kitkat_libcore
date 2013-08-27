@@ -329,6 +329,8 @@ class HttpURLConnectionImpl extends HttpURLConnection {
 
             if (retry == Retry.DIFFERENT_CONNECTION) {
                 httpEngine.automaticallyReleaseConnectionToPool();
+            } else {
+                httpEngine.markConnectionAsRecycled();
             }
 
             httpEngine.release(true);
@@ -406,7 +408,7 @@ class HttpURLConnectionImpl extends HttpURLConnection {
     final boolean processAuthHeader(int responseCode, ResponseHeaders response,
             RawHeaders successorRequestHeaders) throws IOException {
         if (responseCode != HTTP_PROXY_AUTH && responseCode != HTTP_UNAUTHORIZED) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Bad response code: " + responseCode);
         }
 
         // keep asking for username/password until authorized

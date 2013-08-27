@@ -216,18 +216,11 @@ public final class IoBridge {
                 cause = errnoException;
             }
         }
-        // TODO: is it really helpful/necessary to throw so many different exceptions?
         String detail = connectDetail(inetAddress, port, timeoutMs, cause);
-        if (cause.errno == ECONNRESET || cause.errno == ECONNREFUSED ||
-                cause.errno == EADDRNOTAVAIL || cause.errno == EADDRINUSE ||
-                cause.errno == ENETUNREACH) {
-            throw new ConnectException(detail, cause);
-        } else if (cause.errno == EACCES) {
-            throw new SecurityException(detail, cause);
-        } else if (cause.errno == ETIMEDOUT) {
+        if (cause.errno == ETIMEDOUT) {
             throw new SocketTimeoutException(detail, cause);
         }
-        throw new SocketException(detail, cause);
+        throw new ConnectException(detail, cause);
     }
 
     // Socket options used by java.net but not exposed in SocketOptions.
@@ -280,7 +273,7 @@ public final class IoBridge {
         case SocketOptions.SO_OOBINLINE:
             return booleanFromInt(Libcore.os.getsockoptInt(fd, SOL_SOCKET, SO_OOBINLINE));
         case SocketOptions.SO_RCVBUF:
-            return Libcore.os.getsockoptInt(fd, SOL_SOCKET, SO_SNDBUF);
+            return Libcore.os.getsockoptInt(fd, SOL_SOCKET, SO_RCVBUF);
         case SocketOptions.SO_REUSEADDR:
             return booleanFromInt(Libcore.os.getsockoptInt(fd, SOL_SOCKET, SO_REUSEADDR));
         case SocketOptions.SO_SNDBUF:
@@ -497,7 +490,7 @@ public final class IoBridge {
                 return 0;
             }
         } else {
-            if (errnoException.errno == EAGAIN || errnoException.errno == EWOULDBLOCK) {
+            if (errnoException.errno == EAGAIN) {
                 // We were asked to write to a non-blocking socket, but were told
                 // it would block, so report "no bytes written".
                 return 0;
@@ -546,7 +539,7 @@ public final class IoBridge {
 
     private static int maybeThrowAfterRecvfrom(boolean isRead, boolean isConnected, ErrnoException errnoException) throws SocketException, SocketTimeoutException {
         if (isRead) {
-            if (errnoException.errno == EAGAIN || errnoException.errno == EWOULDBLOCK) {
+            if (errnoException.errno == EAGAIN) {
                 return 0;
             } else {
                 throw errnoException.rethrowAsSocketException();
@@ -554,7 +547,7 @@ public final class IoBridge {
         } else {
             if (isConnected && errnoException.errno == ECONNREFUSED) {
                 throw new PortUnreachableException("", errnoException);
-            } else if (errnoException.errno == EAGAIN || errnoException.errno == EWOULDBLOCK) {
+            } else if (errnoException.errno == EAGAIN) {
                 throw new SocketTimeoutException(errnoException);
             } else {
                 throw errnoException.rethrowAsSocketException();

@@ -366,26 +366,6 @@ public final class ZipFileTest extends TestCase {
         zipFile.close();
     }
 
-    // https://code.google.com/p/android/issues/detail?id=58465
-    public void test_NUL_in_filename() throws Exception {
-        File file = createTemporaryZipFile();
-
-        // We allow creation of a ZipEntry whose name contains a NUL byte,
-        // mainly because it's not likely to happen by accident and it's useful for testing.
-        ZipOutputStream out = createZipOutputStream(file);
-        out.putNextEntry(new ZipEntry("hello"));
-        out.putNextEntry(new ZipEntry("hello\u0000"));
-        out.close();
-
-        // But you can't open a ZIP file containing such an entry, because we reject it
-        // when we find it in the central directory.
-        try {
-            ZipFile zipFile = new ZipFile(file);
-            fail();
-        } catch (ZipException expected) {
-        }
-    }
-
     public void testNameLengthChecks() throws IOException {
         // Is entry name length checking done on bytes or characters?
         // Really it should be bytes, but the RI only checks characters at construction time.
@@ -413,6 +393,26 @@ public final class ZipFileTest extends TestCase {
         out.closeEntry();
         out.putNextEntry(new ZipEntry("okay")); // ZipOutputStream.close throws if you add nothing!
         out.close();
+    }
+
+    // https://code.google.com/p/android/issues/detail?id=58465
+    public void test_NUL_in_filename() throws Exception {
+        File file = createTemporaryZipFile();
+
+        // We allow creation of a ZipEntry whose name contains a NUL byte,
+        // mainly because it's not likely to happen by accident and it's useful for testing.
+        ZipOutputStream out = createZipOutputStream(file);
+        out.putNextEntry(new ZipEntry("hello"));
+        out.putNextEntry(new ZipEntry("hello\u0000"));
+        out.close();
+
+        // But you can't open a ZIP file containing such an entry, because we reject it
+        // when we find it in the central directory.
+        try {
+            ZipFile zipFile = new ZipFile(file);
+            fail();
+        } catch (ZipException expected) {
+        }
     }
 
     public void testCrc() throws IOException {

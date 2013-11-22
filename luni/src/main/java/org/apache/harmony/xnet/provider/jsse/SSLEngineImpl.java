@@ -370,7 +370,7 @@ public class SSLEngineImpl extends SSLEngine {
         if (session != null) {
             return session;
         }
-        return SSLSessionImpl.getNullSession();
+        return SSLSessionImpl.NULL_SESSION;
     }
 
     /**

@@ -1220,7 +1220,29 @@ outer:
      * @throws NullPointerException
      *             if {@code string} is {@code null}.
      */
-    public native boolean regionMatches(int thisStart, String string, int start, int length);
+    public boolean regionMatches(int thisStart, String string, int start, int length) {
+        if (string == null) {
+            throw new NullPointerException("string == null");
+        }
+        if (start < 0 || string.count - start < length) {
+            return false;
+        }
+        if (thisStart < 0 || count - thisStart < length) {
+            return false;
+        }
+        if (length <= 0) {
+            return true;
+        }
+        int o1 = offset + thisStart, o2 = string.offset + start;
+        char[] value1 = value;
+        char[] value2 = string.value;
+        for (int i = 0; i < length; ++i) {
+            if (value1[o1 + i] != value2[o2 + i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     /**
      * Compares the specified string to this string and compares the specified

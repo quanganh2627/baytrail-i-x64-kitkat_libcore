@@ -33,13 +33,8 @@ import libcore.util.EmptyArray;
 
 public final class SSLSessionImpl implements SSLSession, Cloneable  {
 
-    /*
-     * Holds default instances so class preloading doesn't create an instance of
-     * it.
-     */
-    private static class DefaultHolder {
-        public static final SSLSessionImpl NULL_SESSION = new SSLSessionImpl(null);
-    }
+    /** Session object reporting an invalid cipher suite of "SSL_NULL_WITH_NULL_NULL" */
+    public static final SSLSessionImpl NULL_SESSION = new SSLSessionImpl(null);
 
     private long creationTime;
     private boolean isValid = true;
@@ -58,10 +53,6 @@ public final class SSLSessionImpl implements SSLSession, Cloneable  {
     byte[] clientRandom;
     byte[] serverRandom;
     final boolean isServer;
-
-    public static SSLSessionImpl getNullSession() {
-        return DefaultHolder.NULL_SESSION;
-    }
 
     public SSLSessionImpl(CipherSuite cipher_suite, SecureRandom secureRandom) {
         creationTime = System.currentTimeMillis();

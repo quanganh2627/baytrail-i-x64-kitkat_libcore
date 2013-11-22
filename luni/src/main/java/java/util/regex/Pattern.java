@@ -288,11 +288,6 @@ public final class Pattern implements Serializable {
     transient long address;
 
     /**
-     * Cached instance is reused for consecutive compiles of the same regex pattern.
-     */
-    private static Pattern patternCache = null;
-
-    /**
      * Returns a {@link Matcher} for this pattern applied to the given {@code input}.
      * The {@code Matcher} can be used to match the {@code Pattern} against the
      * whole input, find occurrences of the {@code Pattern} in the input, or
@@ -376,29 +371,14 @@ public final class Pattern implements Serializable {
      * @see #UNIX_LINES
      */
     public static Pattern compile(String regularExpression, int flags) throws PatternSyntaxException {
-        Pattern localPattern = patternCache; // Keep reference to cached value locally (thread-safety)
-
-        if(   localPattern == null
-           || ( localPattern.pattern() != regularExpression
-                && (regularExpression == null || !regularExpression.equals(localPattern.pattern())) )
-           || localPattern.flags() != flags )
-        {
-            Pattern newPattern = new Pattern(regularExpression, flags);
-
-            // Store compiled pattern in cache
-            patternCache = newPattern;
-
-            // Return new pattern as a result
-            localPattern = newPattern;
-        }
-        return localPattern;
+        return new Pattern(regularExpression, flags);
     }
 
     /**
      * Equivalent to {@code Pattern.compile(pattern, 0)}.
      */
     public static Pattern compile(String pattern) {
-        return compile(pattern, 0);
+        return new Pattern(pattern, 0);
     }
 
     private Pattern(String pattern, int flags) throws PatternSyntaxException {
@@ -437,7 +417,7 @@ public final class Pattern implements Serializable {
      * @see Matcher#matches()
      */
     public static boolean matches(String regularExpression, CharSequence input) {
-        return new Matcher(compile(regularExpression, 0), input).matches();
+        return new Matcher(new Pattern(regularExpression, 0), input).matches();
     }
 
     /**

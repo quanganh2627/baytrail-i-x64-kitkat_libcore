@@ -87,12 +87,6 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libjavacore
 LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/NativeCode.mk
 include external/stlport/libstlport.mk
-
-ifeq ($(INTEL_HOUDINI), true)
-    LOCAL_CPPFLAGS += -DWITH_HOUDINI
-    LOCAL_STATIC_LIBRARIES += houdini_hook
-endif
-
 include $(BUILD_SHARED_LIBRARY)
 
 # Platform conscrypt crypto library

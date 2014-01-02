@@ -211,9 +211,6 @@ public class DigitalSignature {
     public boolean verifySignature(byte[] data) {
         if (signature != null) {
             try {
-                if (sha_hash == null) {
-                    sha_hash = sha.digest();
-                }
                 signature.update(sha_hash);
                 return signature.verify(data);
             } catch (SignatureException e) {
@@ -232,12 +229,6 @@ public class DigitalSignature {
             }
 
             final byte[] md5_sha;
-            if (sha != null && sha_hash == null) {
-                sha_hash = sha.digest();
-            }
-            if (md5 != null && md5_hash == null) {
-                md5_hash = md5.digest();
-            }
             if (md5_hash != null && sha_hash != null) {
                 md5_sha = new byte[md5_hash.length + sha_hash.length];
                 System.arraycopy(md5_hash, 0, md5_sha, 0, md5_hash.length);

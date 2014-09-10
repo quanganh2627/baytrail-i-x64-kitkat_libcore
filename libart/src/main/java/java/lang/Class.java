@@ -239,9 +239,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
     /** Bitmap of offsets of iFields. */
     private transient int referenceInstanceOffsets;
 
-    /** Bitmap of offsets of sFields. */
-    private transient int referenceStaticOffsets;
-
     /** State of class initialization */
     private transient int status;
 

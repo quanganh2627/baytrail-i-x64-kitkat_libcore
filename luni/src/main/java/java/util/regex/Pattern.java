@@ -374,11 +374,21 @@ public final class Pattern implements Serializable {
         return new Pattern(regularExpression, flags);
     }
 
+    private static String lastStr = ".";
+    private static int lastFlags = 0;
+    private static Pattern lastPattern = Pattern.compile(lastStr, lastFlags);
+
     /**
      * Equivalent to {@code Pattern.compile(pattern, 0)}.
      */
     public static Pattern compile(String pattern) {
-        return new Pattern(pattern, 0);
+       if ( lastStr == pattern ) {
+            return lastPattern;
+        }
+
+        lastStr = pattern;
+        lastPattern = new Pattern(pattern, 0);
+        return lastPattern;
     }
 
     private Pattern(String pattern, int flags) throws PatternSyntaxException {

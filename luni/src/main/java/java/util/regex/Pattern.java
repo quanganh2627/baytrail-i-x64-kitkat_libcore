@@ -382,7 +382,7 @@ public final class Pattern implements Serializable {
      * Equivalent to {@code Pattern.compile(pattern, 0)}.
      */
     public static Pattern compile(String pattern) {
-       if ( lastStr == pattern ) {
+       if (lastStr == pattern && pattern != null) {
             return lastPattern;
         }
 
